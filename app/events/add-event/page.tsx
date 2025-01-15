@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { CldUploadButton } from "next-cloudinary";
+import NavigatorButton from "@/components/general/navigator";
 import DotsLoader from "@/components/loading/dotLoader";
-import EventMap from "../../test/page"; // Imported EventMap instead of MapComponent
+import MapComponent from "@/components/map/mapComponent";
 
 export default function AddEventPage() {
   const [eventCoordinates, setEventCoordinates] = useState<{ lat: number; lng: number } | null>(null);
@@ -19,7 +20,6 @@ export default function AddEventPage() {
   const [clubs, setClubs] = useState<{ clubName: string }[]>([]);
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
-  const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   const uploadPreset = process.env.NEXT_PUBLIC_CLOUDNARY_UPLOAD_PRESET as string;
@@ -55,7 +55,10 @@ export default function AddEventPage() {
       eventVenue,
       eventTime,
       eventCoordinates
-    };
+    };   
+    
+    console.log(eventCoordinates?.lat);
+    
 
     try {
       const res = await axios.post(
@@ -70,30 +73,34 @@ export default function AddEventPage() {
     }
   }
 
+  async function fetchClubs() {
+    try {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/clubs/head`);
+      if (response.status === 403) router.push("/");
+      setClubs(response.data);
+    } catch (err) {
+      console.error(err);
+      router.push("/");
+    }
+  }
 
   useEffect(() => {
-    async function fetchClubs() {
-      try {
-        setLoading(true);
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/clubs/head`);
-        if (response.status === 403) router.push("/");
-        setClubs(response.data);
-      } catch (err) {
-        console.error(err);
-        router.push("/");
-      } finally {
-        setLoading(false);
-      }
-
-    }
-
     fetchClubs();
-  }, [router]);
+  }, []);
 
-  if (loading || clubs.length === 0) return <DotsLoader />;
+  if (clubs.length === 0) return <DotsLoader />;
+
+  const dropdownItems = [
+    { label: "Events", href: "/events" },
+    { label: "Dashboard", href: "/dashboard" },
+    { label: "Home", href: "/" },
+  ];
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-black to-[#0B0C10] p-4">
+      <div className="absolute top-6 right-6">
+        <NavigatorButton buttonText="Navigate" dropdownItems={dropdownItems} />
+      </div>
       <div className="w-full max-w-4xl p-6 bg-gradient-to-br from-[#1F2833] to-[#0B0C10] text-white rounded-lg shadow-xl">
         <h1 className="text-4xl font-bold text-center mb-8 text-gray-300">Add Event</h1>
 
@@ -161,26 +168,25 @@ export default function AddEventPage() {
           </div>
 
           <div className="mt-8">
-            <EventMap
-              onLocationSelect={handleLocationSelect} // Using EventMap instead of MapComponent
-            />
+            <label className="block text-lg font-semibold text-gray-300">Event Venue (Map)</label>
+            <MapComponent onLocationSelect={handleLocationSelect} />
             {eventCoordinates && (
               <p className="text-gray-300 mt-2">
-                Selected Location: Latitude {eventCoordinates.lat}, Longitude {eventCoordinates.lng}
+                Selected Location: Done Latitude {eventCoordinates.lat}, Longitude {eventCoordinates.lng}
               </p>
             )}
           </div>
 
           <div>
-            <label className="block text-lg font-semibold text-gray-300">Event Venue</label>
-            <input
-              value={eventVenue}
-              onChange={(e) => setEventVenue(e.target.value)}
-              type="text"
-              placeholder="Event Heading"
-              className="w-full p-2 rounded bg-[#1F2833] border border-blue-300 focus:ring-2 focus:ring-cyan-500"
-            />
-          </div>
+          <label className="block text-lg font-semibold text-gray-300">Event Venue</label>
+          <input
+            value={eventVenue}
+            onChange={(e) => setEventVenue(e.target.value)}
+            type="text"
+            placeholder="Event Heading"
+            className="w-full p-2 rounded bg-[#1F2833] border border-blue-300 focus:ring-2 focus:ring-cyan-500"
+          />
+        </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>

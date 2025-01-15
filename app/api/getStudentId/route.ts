@@ -9,15 +9,21 @@ export async function GET() {
     await dbConnect();
 
     const session = await getServerSession(authOptions);
+    console.log(session);
+    
     const user: User = session?.user as User;
 
     if (!session || !user) {
       return NextResponse.json({ error: 'Unauthorized. User must be logged in.' }, { status: 401 });
     }
 
-    const userId = new mongoose.Types.ObjectId(user._id);
+    const userId = new mongoose.Types.ObjectId(user._id);   
+    console.log(user._id);
+     
 
-    const student = await StudentModel.findOne({ user_id: userId }).select('student_id');
+    const student = await StudentModel.findOne({ user_id: user._id }).select('student_id');    
+
+    
 
     if (!student) {
       return new Response(

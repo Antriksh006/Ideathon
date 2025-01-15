@@ -61,7 +61,7 @@ const OpenStreetmap: React.FC = () => {
     const fetchStudentId = async () => {
       try {
         const response = await axios.get('http://localhost:3000/api/getStudentId')
-        if (response.data?.student_id) {
+        if (response.data?.student_id) {          
           const fetchedStudentId = response.data.student_id
           setStudentId(fetchedStudentId)
           localStorage.setItem('studentId', fetchedStudentId)
